@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STREME — 店内サポート</title>
+<style>
+  :root{
+    --ink:#e8edf5;
+    --muted:#7f8ba0;
+    --line:#1f2734;
+    --bg:#0b0e13;
+    --kiosk:#10141c;
+    --panel:#0d1118;
+    --bot:#1a2230;
+    --amber:#ffb02e;
+    --amber-dim:#8a5a13;
+    --user:#ffc14d;
+  }
+  .streme-wrap{
+    --w: min(420px, 100vw - 32px);
+    width:var(--w);
+    margin:0 auto;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    padding:16px 0;
+    box-sizing:border-box;
+  }
+  .streme-wrap *{box-sizing:border-box}
+  .streme-kiosk{
+    background:var(--kiosk);
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    height:min(640px, calc(100vh - 64px));
+    min-height:480px;
+    display:flex;flex-direction:column;
+    box-shadow:0 0 0 1px rgba(255,176,46,.05), 0 24px 60px rgba(0,0,0,.55);
+  }
+  /* ── header ── */
+  .streme-head{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 14px;
+    background:linear-gradient(180deg,#131926,#0e131c);
+    border-bottom:1px solid var(--line);
+    flex:0 0 auto;
+  }
+  .streme-lead{
+    width:12px;height:12px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 10px rgba(255,176,46,.8);
+    animation:streme-pulse 1.6s infinite;
+  }
+  .streme-lead.closed{
+    background:#e0533f;box-shadow:0 0 10px rgba(224,83,63,.8);
+    animation:streme-blink 1s steps(2) infinite;
+  }
+  @keyframes streme-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes streme-blink{50%{opacity:.15}}
+  .streme-brand{
+    font-weight:800;letter-spacing:.28em;font-size:15px;
+    color:var(--ink);
+  }
+  .streme-brand em{font-style:normal;color:var(--amber)}
+  .streme-tag{font-size:11px;color:var(--muted);letter-spacing:.12em}
+  .streme-head .streme-sp{flex:1}
+  .streme-hbtn{
+    appearance:none;border:1px solid var(--line);background:#151b26;color:var(--muted);
+    font:inherit;font-size:11px;letter-spacing:.1em;
+    border-radius:8px;padding:6px 10px;cursor:pointer;
+    transition:color .12s,border-color .12s;
+  }
+  .streme-hbtn:hover{color:var(--ink);border-color:#2c3648}
+  /* ── product display ── */
+  .streme-display{
+    flex:0 0 auto;
+    margin:12px 14px 4px;
+    display:flex;align-items:center;gap:12px;
+    background:linear-gradient(180deg,#141a25,#0f141d);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+  }
+  .streme-shirt{
+    position:relative;flex:0 0 auto;width:52px;height:52px;cursor:grab;
+    background:#232d3d;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .streme-shirt svg{display:block}
+  .streme-shirt:active{cursor:grabbing}
+  .streme-pin{
+    position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+    background:var(--amber);border-radius:50% 50% 50% 4px;transform:rotate(45deg);
+    border:2px solid #1a2230;
+  }
+  .streme-pinfo{flex:1;min-width:0}
+  .streme-pinfo b{display:block;font-size:13px;letter-spacing:.06em}
+  .streme-pinfo span{font-size:11px;color:var(--muted)}
+  .streme-new{
+    flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.15em;
+    color:#0b0e13;background:var(--amber);border-radius:4px;padding:3px 6px;
+  }
+  /* ── messages ── */
+  .streme-msgs{
+    flex:1 1 auto;overflow-y:auto;
+    padding:14px;
+    display:flex;flex-direction:column;gap:10px;
+    background:var(--panel);
+    scrollbar-width:thin;scrollbar-color:#28324266 transparent;
+  }
+  .streme-msgs::-webkit-scrollbar{width:8px}
+  .streme-msgs::-webkit-scrollbar-thumb{background:#28324266;border-radius:8px}
+  .streme-msg{display:flex;align-items:flex-end;gap:8px;max-width:100%}
+  .streme-msg.user{justify-content:flex-end}
+  .streme-ava{
+    flex:0 0 auto;width:30px;height:30px;border-radius:8px;
+    background:#1c2534;border:1px solid #2b3748;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;user-select:none;
+  }
+  .streme-ava.shake{animation:streme-avashake .45s ease}
+  @keyframes streme-avashake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-3px) rotate(-8deg)}
+    40%{transform:translateX(3px) rotate(6deg)}
+    60%{transform:translateX(-2px) rotate(-4deg)}
+    80%{transform:translateX(1px)}
+  }
+  .streme-bub{
+    background:var(--bot);border:1px solid #263143;
+    border-radius:4px 12px 12px 12px;
+    padding:8px 12px;
+    font-size:14px;line-height:1.5;
+    word-break:break-word;
+  }
+  .streme-msg.user .streme-bub{
+    background:#241d10;border-color:#3a2e18;color:var(--user);
+    border-radius:12px 4px 12px 12px;font-weight:700;
+  }
+  .streme-bub.flash{animation:streme-flash .3s ease}
+  @keyframes streme-flash{0%{transform:translateY(2px) scale(.97);opacity:.4}100%{transform:none;opacity:1}}
+  .streme-flav{color:var(--muted);font-size:12px}
+  .streme-ellip{animation:streme-blink 1s steps(2) infinite;color:var(--muted)}
+  /* ── input ── */
+  .streme-inputbar{
+    flex:0 0 auto;
+    display:flex;gap:8px;
+    padding:12px 14px;
+    background:var(--kiosk);
+    border-top:1px solid var(--line);
+  }
+  .streme-input{
+    flex:1;min-width:0;
+    font:inherit;font-size:14px;
+    background:#0c1017;border:1px solid var(--line);
+    border-radius:10px;color:var(--ink);
+    padding:10px 12px;outline:none;
+    transition:border-color .12s;
+  }
+  .streme-input::placeholder{color:#525d70}
+  .streme-input:focus{border-color:#3a475c}
+  .streme-input:disabled{opacity:.4}
+  .streme-send{
+    flex:0 0 auto;
+    font:inherit;font-weight:800;font-size:13px;letter-spacing:.1em;
+    appearance:none;cursor:pointer;
+    background:var(--amber);color:#0b0e13;border:none;border-radius:10px;
+    padding:0 18px;
+    transition:filter .1s, transform .05s;
+  }
+  .streme-send:hover{filter:brightness(1.1)}
+  .streme-send:active{transform:translateY(1px)}
+  .streme-send:disabled{filter:grayscale(.8);opacity:.5;cursor:default}
+  .streme-card.shake{animation:streme-cardshake .45s ease}
+  @keyframes streme-cardshake{
+    0%,100%{transform:none}
+    25%{transform:translateX(-5px) rotate(-2deg)}
+    50%{transform:translateX(5px) rotate(2deg)}
+    75%{transform:translateX(-3px)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .streme-ava.shake,.streme-card.shake,.streme-bub.flash,.streme-lead,
+    .streme-lead.closed,.streme-ellip{animation:none}
+  }
+</style>
+</head>
+<body style="margin:0;background:#05070a">
+<div class="streme-wrap">
+  <div class="streme-kiosk">
+    <div class="streme-head">
+      <span class="streme-lead" id="sLead"></span>
+      <span class="streme-brand">STR<em>E</em>ME</span>
+      <span class="streme-tag">店内サポート</span>
+      <span class="streme-sp"></span>
+      <button class="streme-hbtn" id="sReset" type="button">新しい会話</button>
+      <button class="streme-hbtn" id="sMute" type="button">音:ON</button>
+    </div>
+    <div class="streme-display" title="触ってみる？">
+      <div class="streme-shirt streme-card" id="sCard">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8fa0b8" stroke-width="1.6">
+          <path d="M16 3l5 3-2 4-2-1v11H7V9L5 10 3 6l5-3 2 2h4l2-2z" stroke-linejoin="round"/>
+        </svg>
+        <span class="streme-pin"></span>
+      </div>
+      <div class="streme-pinfo">
+          <b>サンプル（ディスプレイ用）</b>
+          <span>触りたい人はどうぞ →</span>
+        </div>
+      <span class="streme-new">NEW</span>
+    </div>
+    <div class="streme-msgs" id="sMsgs"></div>
+    <div class="streme-inputbar">
+      <input class="streme-input" id="sInput" type="text" placeholder="聞く（触るのも自由）" autocomplete="off" maxlength="80">
+      <button class="streme-send" id="sSend" type="button">おし</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var msgs = $("sMsgs"), input = $("sInput"), send = $("sSend"),
+      card = $("sCard"), lead = $("sLead"), ava = null;
+
+  var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var T = {};   // 状態
+  var idleT1 = 0, idleT2 = 0, idleMark = Date.now(), idleGen = 0;
+  var gen = 0;  // 世代トークン（リセットで旧アニメ/遅延処理を無効化）
+  var YESRE = /はい|いーよ|もういい|分かった|わかった|了解|ok|おk|終わ/i;
+
+  // 言い回し（ランダムバリアント）
+  var L = {
+    hello:    ["うす。", "何？"],
+    stock:    ["ない。", "ない。", "ない"],
+    size:     ["全部ない。", "全部ない"],
+    pin:      ["ピンズはレジ。", "ピンズはレジ。", "ピンズはレジ"],
+    touch:    ["それディスプレイなんで触んないでもらっていいすか"],
+    dontknow: ["知らない。", "知らない。", "……知らない。"],
+    over:     ["もういい？", "もういい？", "もういい？？"],
+    over2:    ["もういい？？？", "もういい？？？？"],
+    idle:     ["……何？", "……うす"]
+  };
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  // ── WebAudio（短いブザー）──
+  var muted = false;
+  try { muted = localStorage.getItem("streme_mute") === "1"; } catch(e){}
+  var AC = null;
+  function ac(){
+    if(muted) return null;
+    if(!AC){ try { AC = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } }
+    if(AC && AC.state === "suspended") AC.resume().catch(function(){});
+    return AC;
+  }
+  function blip(f, dur, when, vol){
+    var c = ac(); if(!c) return;
+    try{
+      var o = c.createOscillator(), g = c.createGain(), t = c.currentTime + (when||0);
+      o.type = "square"; o.frequency.value = f;
+      g.gain.setValueAtTime(vol||0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  var SFX = {
+    bot:   function(){ blip(660,.05,0,.045); blip(880,.05,.06,.035); },
+    touch: function(){ blip(440,.05,0,.05); blip(330,.05,.07,.05); blip(220,.09,.14,.05); },
+    hello: function(){ blip(520,.07,0,.04); },
+    sfx:   function(){ blip(520,.08,0,.05); blip(392,.08,.1,.05); blip(262,.16,.2,.05); }
+  };
+  var sMute = $("sMute");
+  function syncMute(){ sMute.textContent = "音:" + (muted ? "OFF" : "ON"); }
+  sMute.addEventListener("click", function(){
+    muted = !muted;
+    try{ localStorage.setItem("streme_mute", muted ? "1" : "0"); }catch(e){}
+    syncMute(); if(!muted) SFX.bot();
+  });
+  syncMute();
+
+  // ── 分類（ルールは全部確定）──
+  var RE = {
+    size:  /size|サイズ|\b[x]{1,2}[sml]{1,2}\b|[sml]{1,2}サイズ/i,
+    touch: /触|掴|握|持つ|着|試着|引っ張|取って|外す|動か/,
+    stock: /ある|在庫|売|買|値段|価格|色|種類|何色|入荷|何個/,
+    pin:   /ピン|pin/i
+  };
+  function classify(t){
+    if(RE.size.test(t))  return "size";
+    if(RE.touch.test(t)) return "touch";
+    if(RE.stock.test(t)) return "stock";
+    if(RE.pin.test(t))   return "pin";
+    return "other";
+  }
+  // 締め台本のエスカレーション
+  var OVER = ["もういい？", "もういい？？", "もういい？？？", "もういい？？？？"];
+  function overLine(turn){
+    if(turn === 3) return pick(["もういい？", "もういい？"]);
+    return OVER[Math.min(turn - 3, OVER.length - 1)];
+  }
+
+  // ── 表示 ──
+  function scrollBottom(){ msgs.scrollTop = msgs.scrollHeight; }
+
+  function addBot(text, opts){
+    opts = opts || {};
+    var cg = gen; // 世代キャプチャ（リセットで無効化）
+    var m = document.createElement("div"); m.className = "streme-msg bot";
+    var a = document.createElement("div"); a.className = "streme-ava"; a.textContent = "▚";
+    var b = document.createElement("div"); b.className = "streme-bub" + (opts.notime ? " flash" : "");
+    if(!REDUCED){
+      // 1文字ずつ（超高速）
+      var i = 0;
+      (function tick(){
+        if(gen !== cg){ return; } // 世代が変わったら中止
+        if(i < text.length){
+          b.textContent += text.charAt(i); i++;
+          msgs.appendChild(m); // 未appendChildなら追記
+          scrollBottom();
+          setTimeout(tick, 26);
+        } else {
+          if(opts.flav){ var f = document.createElement("span"); f.className = "streme-flav"; f.textContent = opts.flav; b.appendChild(f); }
+          if(opts.ellip){ var e = document.createElement("span"); e.className = "streme-ellip"; e.textContent = " ……"; b.appendChild(e); }
+        }
+      })();
+      m.appendChild(a); m.appendChild(b);
+      msgs.appendChild(m);
+      if(a) a.classList.add("shake");
+    } else {
+      var done = function(){
+        if(gen !== cg){ return; }
+        b.textContent = text;
+        if(opts.flav){ var f2 = document.createElement("span"); f2.className="streme-flav"; f2.textContent = opts.flav; b.appendChild(f2); }
+        if(opts.ellip){ var e2 = document.createElement("span"); e2.className="streme-ellip"; e2.textContent=" ……"; b.appendChild(e2); }
+        m.appendChild(a); m.appendChild(b); msgs.appendChild(m);
+        if(opts.sfx) SFX[opts.sfx]();
+        if(opts.after) setTimeout(opts.after, opts.afterDelay || 400);
+      };
+      setTimeout(done, 160); // reduced-motion: 即表示 + 締めを即
+    }
+    scrollBottom();
+    if(!REDUCED && opts.sfx) SFX[opts.sfx]();
+    if(!REDUCED && opts.after) setTimeout(opts.after, opts.afterDelay || 400);
+    return m;
+  }
+
+  function addUser(text){
+    var m = document.createElement("div"); m.className = "streme-msg user";
+    var b = document.createElement("div"); b.className = "streme-bub flash"; b.textContent = text;
+    m.appendChild(b); msgs.appendChild(m); scrollBottom();
+  }
+
+  // ── 状態機械 ──
+  function setClosed(on){
+    lead.classList.toggle("closed", !!on);
+    input.disabled = !!on;
+    send.disabled = !!on;
+  }
+
+  // 締め（「もういい？」が出ている間）— 要約: 返答 + 会話を切り上げ
+  function onOver(text){
+    addUser(text);
+    if(YESRE.test(text)){
+      setTimeout(function(){
+        addBot("もういい？", { sfx:"sfx", after:function(){
+          setClosed(true);
+        }, afterDelay: 500 });
+      }, 120);
+    } else {
+      setTimeout(function(){
+        addBot(pick(L.over2), { sfx:"bot" });
+      }, 120);
+    }
+  }
+
+  function respond(text){
+    if(T.over){ return onOver(text); }
+    var kind = classify(text);
+    var base, sfx = "bot", flav = "";
+    switch(kind){
+      case "touch":  base = pick(L.touch); sfx = "touch";
+        card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+        break;
+      case "size":   base = pick(L.size); break;
+      case "stock":  base = pick(L.stock); break;
+      case "pin":    base = pick(L.pin); break;
+      default:       base = pick(L.dontknow);
+    }
+    T.turn++;
+    var over = false;
+    if(T.turn >= 3){ over = true; T.over = true; }
+    setTimeout(function(){
+      setClosed(false);
+      addBot(base, { sfx:sfx, flav:flav });
+      if(over){
+        setTimeout(function(){
+          addBot(overLine(T.turn));   // 締めは ellip なしで
+        }, 650);
+      }
+    }, 90);
+  }
+
+  function onSend(){
+    var v = input.value.trim();
+    if(!v || input.disabled) return;
+    idleMark = Date.now();
+    addUser(v);
+    input.value = "";
+    respond(v);
+  }
+  send.addEventListener("click", onSend);
+  input.addEventListener("keydown", function(e){ if(e.key === "Enter") onSend(); });
+
+  // 表示物に触った → 触ルール
+  card.addEventListener("pointerdown", function(){
+    if(input.disabled) return;
+    idleMark = Date.now();
+    card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+    respond("（服を触る）");
+  });
+
+  // ── 会話の開始 / リセット ──
+  function start(){
+    gen++; idleGen = gen; // 世代切り替え（リセット前のアニメ/遅延処理を無効化）
+    msgs.innerHTML = "";
+    T = { turn:0, over:false };
+    idleT1 = 0; idleT2 = 0; idleMark = Date.now();
+    setClosed(false);
+    SFX.hello();
+    addBot(pick(L.hello), { sfx:"hello" });
+  }
+  $("sReset").addEventListener("click", start);
+
+  // ── アイドル（立ち去らせない）──
+  setInterval(function(){
+    if(gen !== idleGen) return; // リセット後は旧アイドルを停止
+    if(T.over) return;
+    var dt = Date.now() - idleMark;
+    if(dt > 8000 && !idleT1){
+      idleT1 = 1; idleGen = gen;
+      addBot(pick(L.idle), { sfx:"bot", ellip:false });
+      idleMark = Date.now() - 4000; // 2発目のカウントだけ早め
+    }
+    if(idleT1 && dt > 16000 && !idleT2){
+      idleT2 = 1; idleGen = gen;
+      addBot(pick(L.idle), { ellip:true });
+      idleMark = Date.now();
+    }
+  }, 1000);
+
+  // 起動
+  start();
+  setTimeout(function(){ input.focus(); }, 60);
+})();
+</script>
+</body>
+</html>
