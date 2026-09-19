@@ -212,7 +212,7 @@
     <div class="streme-msgs" id="sMsgs"></div>
     <div class="streme-inputbar">
       <input class="streme-input" id="sInput" type="text" placeholder="聞く（触るのも自由）" autocomplete="off" maxlength="80">
-      <button class="streme-send" id="sSend" type="button">おし</button>
+      <button class="streme-send" id="sSend" type="button">送信</button>
     </div>
   </div>
 </div>
@@ -407,7 +407,10 @@
     respond(v);
   }
   send.addEventListener("click", onSend);
-  input.addEventListener("keydown", function(e){ if(e.key === "Enter") onSend(); });
+  input.addEventListener("keydown", function(e){
+    // IME（かな変換）の確定Enterでは送信しない（組立中 or keyCode 229）
+    if(e.key === "Enter" && !e.isComposing && e.keyCode !== 229) onSend();
+  });
 
   // 表示物に触った → 触ルール
   card.addEventListener("pointerdown", function(){
