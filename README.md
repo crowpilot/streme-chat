@@ -14,7 +14,6 @@ Spremeの店員にインスパイアされた、超高速・ぶっきらぼう�
 | 表示の服に触る（入力に「触」系／商品をタップ） | 「それディスプレイなんで触んないでもらっていいすか」 |
 | その他の質問 | 「知らない。」 |
 | 3ターン目以降 | 返答 +「もういい？」で会話を切り上げ |
-| 8秒放置 | 「……何？」 / 「……うす」（立ち去らせない） |
 
 超高速 = 1文字26msで打字表示（reduced-motion時は即表示）。WebAudioで短いブザー（`音:`でON/OFF、localStorage保持）。
 
@@ -41,8 +40,7 @@ Custom HTML ブロックに貼り付け。外部依存がないのでそのま�
 ※ `<style>` と `<script>` はそれぞれブロック内に1つにまとめて貼ってください。
 
 ## 調整ポイント（`streme.html` 内の `L` と `RE` 変数）
-- 言い回しバリエーション → `L`（hello/stock/size/pin/touch/dontknow/over/over2/idle）
+- 言い回しバリエーション → `L`（hello/stock/size/pin/touch/dontknow/over/over2）
 - 分類キーワード → `RE`（size/touch/stock/pin の正規表現）
 - 打字速度 → `addBot` 内 `setTimeout(tick, 26)`
 - 締めターン → `respond` 内 `T.turn >= 3`
-- アイドル発火 → 最下部の `setInterval`（8000 / 16000 ms）

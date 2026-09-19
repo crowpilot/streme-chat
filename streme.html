@@ -225,7 +225,6 @@
 
   var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var T = {};   // 状態
-  var idleT1 = 0, idleT2 = 0, idleMark = Date.now(), idleGen = 0;
   var gen = 0;  // 世代トークン（リセットで旧アニメ/遅延処理を無効化）
   var YESRE = /はい|いーよ|もういい|分かった|わかった|了解|ok|おk|終わ/i;
 
@@ -238,8 +237,7 @@
     touch:    ["それディスプレイなんで触んないでもらっていいすか"],
     dontknow: ["知らない。", "知らない。", "……知らない。"],
     over:     ["もういい？", "もういい？", "もういい？？"],
-    over2:    ["もういい？？？", "もういい？？？？"],
-    idle:     ["……何？", "……うす"]
+    over2:    ["もういい？？？", "もういい？？？？"]
   };
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
@@ -404,7 +402,6 @@
   function onSend(){
     var v = input.value.trim();
     if(!v || input.disabled) return;
-    idleMark = Date.now();
     addUser(v);
     input.value = "";
     respond(v);
@@ -415,39 +412,20 @@
   // 表示物に触った → 触ルール
   card.addEventListener("pointerdown", function(){
     if(input.disabled) return;
-    idleMark = Date.now();
     card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
     respond("（服を触る）");
   });
 
   // ── 会話の開始 / リセット ──
   function start(){
-    gen++; idleGen = gen; // 世代切り替え（リセット前のアニメ/遅延処理を無効化）
+    gen++; // 世代切り替え（リセット前のアニメ/遅延処理を無効化）
     msgs.innerHTML = "";
     T = { turn:0, over:false };
-    idleT1 = 0; idleT2 = 0; idleMark = Date.now();
     setClosed(false);
     SFX.hello();
     addBot(pick(L.hello), { sfx:"hello" });
   }
   $("sReset").addEventListener("click", start);
-
-  // ── アイドル（立ち去らせない）──
-  setInterval(function(){
-    if(gen !== idleGen) return; // リセット後は旧アイドルを停止
-    if(T.over) return;
-    var dt = Date.now() - idleMark;
-    if(dt > 8000 && !idleT1){
-      idleT1 = 1; idleGen = gen;
-      addBot(pick(L.idle), { sfx:"bot", ellip:false });
-      idleMark = Date.now() - 4000; // 2発目のカウントだけ早め
-    }
-    if(idleT1 && dt > 16000 && !idleT2){
-      idleT2 = 1; idleGen = gen;
-      addBot(pick(L.idle), { ellip:true });
-      idleMark = Date.now();
-    }
-  }, 1000);
 
   // 起動
   start();
